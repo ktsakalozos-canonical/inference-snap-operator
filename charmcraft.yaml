@@ -1,0 +1,84 @@
+name: inference-snap
+type: charm
+title: Canonical Inference Snap
+summary: Deploy and manage a Canonical inference snap on a machine.
+description: |
+  This machine charm installs and operates one of Canonical's optimized
+  inference snaps (https://documentation.ubuntu.com/inference-snaps/).
+
+  The inference snap to deploy is selected through the `inference-snap`
+  configuration option and defaults to `gemma3`. Each inference snap detects
+  the host hardware, runs a server as a snap service, and exposes an
+  OpenAI-compatible HTTP API.
+
+  The charm configures the API host/port, opens the port on the machine, and
+  publishes the resulting endpoint over the `inference-api` relation so that
+  client charms can consume the model.
+
+links:
+  documentation: https://documentation.ubuntu.com/inference-snaps/
+  website:
+    - https://canonical.com/blog/canonical-releases-inference-snaps
+
+# Machine charm: inference snaps run as host snaps, not in OCI containers.
+bases:
+  - build-on:
+      - name: ubuntu
+        channel: "24.04"
+    run-on:
+      - name: ubuntu
+        channel: "24.04"
+        architectures: [amd64]
+      - name: ubuntu
+        channel: "24.04"
+        architectures: [arm64]
+  - build-on:
+      - name: ubuntu
+        channel: "22.04"
+    run-on:
+      - name: ubuntu
+        channel: "22.04"
+        architectures: [amd64]
+      - name: ubuntu
+        channel: "22.04"
+        architectures: [arm64]
+
+config:
+  options:
+    inference-snap:
+      type: string
+      default: gemma3
+      description: >
+        Name of the Canonical inference snap to install and run. Must be one of
+        the published inference snaps: gemma3, gemma4, deepseek-r1,
+        nemotron-3-nano, nemotron-3-nano-omni, qwen-vl, qwen3, qwen3-coder,
+        qwen3-6. An unknown value puts the unit into a blocked state.
+    snap-channel:
+      type: string
+      default: latest/stable
+      description: >
+        Snap channel (track/risk) to install the inference snap from, e.g.
+        `latest/stable` or `latest/beta`. Some inference snaps are currently
+        only published to the beta channel.
+    api-port:
+      type: int
+      default: 8080
+      description: >
+        TCP port the inference snap's OpenAI-compatible HTTP server binds to
+        (sets the snap's `http.port`).
+    api-bind-all:
+      type: boolean
+      default: true
+      description: >
+        When true, the API binds to 0.0.0.0 so it is reachable from other
+        machines (sets `http.host=0.0.0.0`). When false it binds to 127.0.0.1
+        and is only reachable from the local machine.
+
+provides:
+  inference-api:
+    interface: inference_openai
+    description: >
+      Exposes the OpenAI-compatible API endpoint of the inference snap to
+      client charms.       The provider publishes `url`, `port`, `model` and `snap`
+      on the application relation data bag.
+
