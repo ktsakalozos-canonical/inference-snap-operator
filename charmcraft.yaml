@@ -21,27 +21,18 @@ links:
     - https://canonical.com/blog/canonical-releases-inference-snaps
 
 # Machine charm: inference snaps run as host snaps, not in OCI containers.
-bases:
-  - build-on:
-      - name: ubuntu
-        channel: "24.04"
-    run-on:
-      - name: ubuntu
-        channel: "24.04"
-        architectures: [amd64]
-      - name: ubuntu
-        channel: "24.04"
-        architectures: [arm64]
-  - build-on:
-      - name: ubuntu
-        channel: "22.04"
-    run-on:
-      - name: ubuntu
-        channel: "22.04"
-        architectures: [amd64]
-      - name: ubuntu
-        channel: "22.04"
-        architectures: [arm64]
+platforms:
+  ubuntu-24.04-amd64:
+    build-on: [ubuntu@24.04:amd64]
+    build-for: [ubuntu@24.04:amd64]
+  ubuntu-22.04-amd64:
+    build-on: [ubuntu@22.04:amd64]
+    build-for: [ubuntu@22.04:amd64]
+
+parts:
+  charm:
+    plugin: charm
+    source: .
 
 config:
   options:
